@@ -1,0 +1,6 @@
+.Rproj.user
+in-data/*
+out-data/*
+out-figures/*
+100_check-substance.R
+101_check-leading-15.R
