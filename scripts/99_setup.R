@@ -3,7 +3,7 @@
 ####################
 
 ## list packages to be installed from cran
-from.cran <- c("ggh4x", "here", "LaF", "plyr", "tidyverse")
+from.cran <- c("ggh4x", "here", "LaF", "plyr", "svglite", "tidyverse")
 
 ## check if installed, else install
 for(i in from.cran){

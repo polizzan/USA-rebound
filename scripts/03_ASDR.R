@@ -14,8 +14,18 @@ exposures <- read.csv(here::here("out-data", "exposures-2019-2024.csv"))
 # LOAD STANDARD POPULATION #
 ############################
 
-standard <- read.csv(here::here("out-data", "US-standard-2000.csv"))
+## 2000 standard population
+standard.2000 <- 
+  read.csv(here::here("out-data", "US-standard-2000.csv")) %>% 
+  select(-Standard, C.2000 = C) 
 
+## 2020 standard population
+standard.2020 <- 
+  read.csv(here::here("out-data", "exposures-2019-2024.csv")) %>% 
+  filter(Year == 2020, Sex == "Total") %>% 
+  mutate(C.2020 = Exposures / sum(Exposures)) %>% 
+  select(-c(Year, Sex, Exposures))
+  
 ####################
 # DATA AGGREGATION #
 ####################
@@ -208,8 +218,10 @@ write.csv(deaths, here::here("out-data", "deaths-2019-2024-grouped.csv"), row.na
 ASDRs <-
   deaths %>% 
   left_join(exposures) %>% 
-  left_join(standard) %>% 
-  summarize(Mx = sum(C * Deaths / Exposures, na.rm = TRUE) * 100000, .by = c(Year, Sex, Cause)) %>% 
+  left_join(standard.2000) %>%
+  left_join(standard.2020) %>%
+  summarize(Mx.2000 = sum(C.2000 * Deaths / Exposures, na.rm = TRUE) * 100000,
+            Mx.2020 = sum(C.2020 * Deaths / Exposures, na.rm = TRUE) * 100000, .by = c(Year, Sex, Cause)) %>% 
   arrange(Year, Sex, Cause)
 
 ##############

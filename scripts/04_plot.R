@@ -4,6 +4,24 @@
 
 ASDRs <- read.csv(here::here("out-data", "ASDRs-2019-2024.csv"))
 
+## loop over standard populations
+walk(c("2000", "2020"), function(p){
+
+  ## select appropriate ASDRs
+  if(p == "2000"){
+    
+  ASDRs <- 
+    ASDRs %>% 
+    rename(Mx = Mx.2000)
+  
+  }else{
+    
+  ASDRs <- 
+    ASDRs %>% 
+    rename(Mx = Mx.2020)
+    
+  }
+  
 ########
 # PLOT #
 ########
@@ -91,8 +109,12 @@ ranges <-
   filter(!Cause %in% "COVID-19") %>% 
   summarize(min = min(Mx),
             max = max(Mx), .by = Cause) %>% 
-  mutate(min = plyr::round_any(min, f = floor, accuracy = 10),
-         max = plyr::round_any(max, f = ceiling, accuracy = 10)) %>% 
+  mutate(min = plyr::round_any(min, f = floor, accuracy = 5),
+         max = ifelse(substr(round(max), 
+                             nchar(round(max)),
+                             nchar(round(max))) < 5,
+                             plyr::round_any(max, f = ceiling, accuracy = 10),
+                             plyr::round_any(max, f = ceiling, accuracy = 10) + 10)) %>% 
   mutate(diff = max(max - min),
          max = min + diff) %>% 
   arrange(Cause) %>% 
@@ -103,7 +125,11 @@ ranges <-
   bind_rows(
     data.frame(Cause = "COVID-19", 
                min = 0, 
-               max = plyr::round_any(max(plot.df$Mx[plot.df$Cause == "COVID-19"]), f = ceiling, accuracy = 20)),
+               max = ifelse(substr(round(max(plot.df$Mx[plot.df$Cause == "COVID-19"])), 
+                                   nchar(round(max(plot.df$Mx[plot.df$Cause == "COVID-19"]))),
+                                   nchar(round(max(plot.df$Mx[plot.df$Cause == "COVID-19"])))) < 5,
+                            plyr::round_any(max(plot.df$Mx[plot.df$Cause == "COVID-19"]), f = ceiling, accuracy = 20),
+                            plyr::round_any(max(plot.df$Mx[plot.df$Cause == "COVID-19"]), f = ceiling, accuracy = 20) + 10)),
     ranges
     )
 
@@ -194,11 +220,13 @@ plot.1 <-
 
 ## save plot data
 write.csv(plot.df %>% select(-c(Indicator1, Indicator2)), 
-          here::here("out-data", "plot-data.csv"), row.names = FALSE)
+          here::here("out-data", paste0("plot-data-", p, ".csv")), row.names = FALSE)
 
 #############
 # SAVE PLOT #
 #############
 
-ggsave(here::here("out-figures", "plot-1.svg"), plot.1, width = 15, height = 9)
-ggsave(here::here("out-figures","plot-1.pdf"), plot.1, width = 15, height = 9)
+ggsave(here::here("out-figures", paste0("plot-1-", p, ".svg")), plot.1, width = 15, height = 9)
+ggsave(here::here("out-figures", paste0("plot-1-", p, ".pdf")), plot.1, width = 15, height = 9)
+
+})
